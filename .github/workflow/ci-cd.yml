@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 env:
-  REMOTE_PATH: /home/ubuntu/secure-webapp-aws-devsecops/flask-app
+  REMOTE_PATH: /home/ubuntu/flask-app
 
 jobs:
   codeql:
@@ -44,7 +44,7 @@ jobs:
         with:
           image-ref: flask-app:latest
           format: table
-          exit-code: 0  # mettre 1 pour fail en cas de vulnérabilités
+          exit-code: 0  # exit-code: 1 si tu veux que le job échoue en cas de vulnérabilités
 
   deploy:
     name: 🚀 Deploy via SSH
@@ -60,11 +60,16 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
           chmod 600 key.pem
 
-      - name: Deploy to EC2
+      - name: Copy updated files to EC2
+        run: |
+          rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" . ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:$REMOTE_PATH
+
+      - name: Restart Docker container on EC2
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/ubuntu/secure-webapp-aws-devsecops/flask-app
-            git pull origin main
-            sudo docker-compose down
-            sudo docker-compose up --build -d
+            set -e
+            cd /home/ubuntu/flask-app
+            docker-compose down
+            docker-compose up --build -d
+            docker system prune -f
           EOF
