@@ -21,12 +21,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: python
 
       - name: Analyze
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
   trivy:
     name: 🐳 Trivy Image Scan
@@ -40,7 +40,7 @@ jobs:
         run: docker build -t flask-app:latest .
 
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@v0.17.0
+        uses: aquasecurity/trivy-action@v0.11.2
         with:
           image-ref: flask-app:latest
           format: table
