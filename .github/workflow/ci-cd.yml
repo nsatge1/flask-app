@@ -1,0 +1,70 @@
+name: CI/CD Flask App via SSH
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  REMOTE_PATH: /home/ubuntu/flask-app
+
+jobs:
+  codeql:
+    name: 🔍 CodeQL Static Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v2
+
+  trivy:
+    name: 🐳 Trivy Image Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t flask-app:latest .
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@v0.17.0
+        with:
+          image-ref: flask-app:latest
+          format: table
+          exit-code: 0  # mettre 1 pour fail en cas de vulnérabilités
+
+  deploy:
+    name: 🚀 Deploy via SSH
+    runs-on: ubuntu-latest
+    needs: [codeql, trivy]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /home/ubuntu/flask-app
+            git pull origin main
+            sudo docker-compose down
+            sudo docker-compose up --build -d
+          EOF
