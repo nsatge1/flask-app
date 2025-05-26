@@ -5,6 +5,6 @@ app = Flask(__name__)
 def home():
     return "Hello, DevSecOps on AWS!"
 
-@app.route("/health")
-def health():
+@app.route("/test")
+def test():
     return "I have a new Service is healthy!"
