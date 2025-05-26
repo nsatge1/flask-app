@@ -40,7 +40,7 @@ jobs:
         run: docker build -t flask-app:latest .
 
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@v0.11.2
+        uses: aquasecurity/trivy-action@latest
         with:
           image-ref: flask-app:latest
           format: table
