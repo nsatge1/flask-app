@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 env:
-  REMOTE_PATH: /home/ubuntu/flask-app
+  REMOTE_PATH: /home/ubuntu/secure-webapp-aws-devsecops/flask-app
 
 jobs:
   codeql:
@@ -63,7 +63,7 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/ubuntu/flask-app
+            cd /home/ubuntu/secure-webapp-aws-devsecops/flask-app
             git pull origin main
             sudo docker-compose down
             sudo docker-compose up --build -d
