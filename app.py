@@ -7,4 +7,4 @@ def home():
 
 @app.route("/health")
 def health():
-    return "I have a new Service is healthy!"
+    return "I have a new service is healthy!"
